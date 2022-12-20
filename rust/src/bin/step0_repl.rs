@@ -23,12 +23,15 @@ fn rep(text: String) -> String {
 fn main() {
 
     let standard_input = io::stdin();
-    while true {
+    loop {
         let mut buffer = String::new();
         print!("user> ");
-        stdout().flush();
-        standard_input.read_line(&mut buffer);
+        stdout().flush().expect("didn't flush properly");
+        if standard_input.read_line(&mut buffer).expect("didn't get the line properly") == 0{
+            break
+        }
         let result = rep(buffer);
         print!("{}", result)
     }
 }
+
