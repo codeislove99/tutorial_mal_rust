@@ -33,22 +33,25 @@ fn read_form(reader: & mut Reader) -> ParseResult {
     } else if head == "{" {
         read_hash_map(reader)
     } else if head == "'"{
-        reader.next();
-        push_in_front(Symbol("quote".to_string()), read_form(reader)?).into()
+        quote_name(reader, "quote")
     } else if head == "`" {
-        reader.next();
-        push_in_front(Symbol("quasiquote".to_string()), read_form(reader)?).into()
+        quote_name(reader, "quasiquote")
     } else if head == "~" {
-        reader.next();
-        push_in_front(Symbol("unquote".to_string()), read_form(reader)?).into()
+        quote_name(reader, "unquote")
     } else if head == "~@" {
-        reader.next();
-        push_in_front(Symbol("splice-unquote".to_string()), read_form(reader)?).into()
+        quote_name(reader, "splice-unquote")
+    } else if head == "@" {
+        quote_name(reader, "deref")
+    } else if head == "^" {
+        read_meta(reader)
     } else{
         read_atom(reader)
     }
 }
-
+fn quote_name(reader: & mut Reader, name: &str) -> ParseResult{
+    reader.next();
+    push_in_front(Symbol(name.to_string()), read_form(reader)?).into()
+}
 fn push_in_front(front: MalType, back: MalType) -> MalType{
     List::new().push_front(back).push_front(front).into()
 }
