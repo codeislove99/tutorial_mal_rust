@@ -1,0 +1,5 @@
+Form = Atom | List | Vector | Map
+List = Many Forms
+Vectors = Many Forms
+Maps = Many (form, form)
+Atom = Int | String | + |-
