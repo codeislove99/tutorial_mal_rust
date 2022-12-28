@@ -32,9 +32,19 @@ fn read_form(reader: & mut Reader) -> ParseResult {
         read_vector(reader)
     } else if head == "{" {
         read_hash_map(reader)
-    } else {
+    } else if head == "'"{
+        reader.next();
+        push_in_front(Symbol("quote".to_string()), read_form(reader)?).into()
+    } else if head == "`" {
+        reader.next();
+        push_in_front(Symbol("quasiquote".to_string()), read_form(reader)?).into()
+    } else{
         read_atom(reader)
     }
+}
+
+fn push_in_front(front: MalType, back: MalType) -> MalType{
+    List::new().push_front(back).push_front(front).into()
 }
 
 fn read_atom(reader: & mut Reader) -> ParseResult {
@@ -62,6 +72,9 @@ fn read_atom(reader: & mut Reader) -> ParseResult {
     } else if head == "false" {
         Bool(false).into()
     } else if head.chars().nth(0).expect("should have at least one value") == '"'{
+        if head.chars().last().unwrap() != '"' {
+            return Err(ParseError::NoClosingParen('"'));
+        }
         MalType::String(head.chars().collect::<List<char>>()).into()
     } else {
         Symbol(head.clone()).into()

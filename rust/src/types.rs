@@ -84,6 +84,19 @@ pub enum MalType {
     HashMap(HashTrieMapWrapper),
 }
 
+impl From<Vector<MalType>> for MalType {
+    fn from(v: Vector<MalType>) -> Self {
+        MalType::Vector(v)
+    }
+}
+
+impl From<List<MalType>> for MalType {
+    fn from(l: List<MalType>) -> Self {
+        MalType::List(l)
+    }
+}
+
+
 impl MalType {
     pub fn as_key(self) -> EvalResult {
         match &self {

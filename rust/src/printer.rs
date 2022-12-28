@@ -5,7 +5,7 @@ use types::MalType::Float;
 impl Display for MalType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            MalType::Nil => write!(f, "Nil"),
+            MalType::Nil => write!(f, "nil"),
             MalType::Bool(bool) => write!(f, "{}", bool),
             MalType::Integer(n) => write!(f, "{}", n),
             Float(n) => write!(f, "{}", n.0),
