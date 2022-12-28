@@ -43,7 +43,7 @@ fn read_form(reader: & mut Reader) -> ParseResult {
     } else if head == "@" {
         quote_name(reader, "deref")
     } else if head == "^" {
-        read_meta(reader)
+        quote_name(reader, "with-meta")
     } else{
         read_atom(reader)
     }
