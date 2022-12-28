@@ -39,8 +39,10 @@ fn read_form(reader: & mut Reader) -> ParseResult {
         reader.next();
         push_in_front(Symbol("quasiquote".to_string()), read_form(reader)?).into()
     } else if head == "~" {
+        reader.next();
         push_in_front(Symbol("unquote".to_string()), read_form(reader)?).into()
     } else if head == "~@" {
+        reader.next();
         push_in_front(Symbol("splice-unquote".to_string()), read_form(reader)?).into()
     } else{
         read_atom(reader)
