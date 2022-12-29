@@ -61,7 +61,7 @@ fn read_atom(reader: & mut Reader) -> ParseResult {
         .chars()
         .next()
         .expect("should be greater then 0 elements")
-        .is_numeric()
+        .is_numeric() || (head.len() > 1 && (head.starts_with("-") || head.starts_with("+")))
     {
         match head.parse::<i64>() {
             Ok(n) => {Integer(n).into()}
@@ -83,7 +83,7 @@ fn read_atom(reader: & mut Reader) -> ParseResult {
             return Err(ParseError::NoClosingParen('"'));
         }
         MalType::String(head.chars().collect::<List<char>>()).into()
-    } else {
+    } else{
         Symbol(head.clone()).into()
     }
 }
@@ -159,14 +159,3 @@ fn tokenize(text: String) -> Vec<String> {
 }
 
 
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_tokenize() {
-        let text = "(+ 1 2.11      hello )".to_string();
-        let result = tokenize(text);
-        print!("{:?}", result);
-        assert_eq!(result.tokens, vec!["(", "+", "1", "2.11", "hello", ")"])
-    }
-}
