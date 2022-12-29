@@ -2,7 +2,6 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ops::Deref;
 use std::rc::Rc;
-use lazy_static::lazy_static;
 use MalType;
 
 pub struct InnerEnv {
@@ -13,7 +12,6 @@ pub struct InnerEnv {
 #[derive(Clone)]
 pub struct Env(Rc<InnerEnv>);
 
-
 impl Deref for Env {
     type Target = InnerEnv;
 
@@ -22,7 +20,7 @@ impl Deref for Env {
     }
 }
 
-impl Env{
+impl Env {
     pub fn new() -> Self {
         Env(Rc::new(InnerEnv {
             data: RefCell::new(HashMap::new()),
@@ -32,7 +30,7 @@ impl Env{
     pub fn set(&self, key: String, value: MalType) {
         self.data.borrow_mut().insert(key, value);
     }
-    pub fn find(&self, key: &String) -> Option<Env>{
+    pub fn find(&self, key: &String) -> Option<Env> {
         if self.data.borrow().contains_key(key.as_str()) {
             Some(self.clone())
         } else {
@@ -49,4 +47,3 @@ impl Env{
         }
     }
 }
-

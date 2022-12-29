@@ -1,10 +1,9 @@
-use std::error;
-use rpds::{HashTrieMap, List, Vector};
-use std::fmt::{Debug, Display, Formatter, write};
-use std::hash::{Hash};
-use std::iter::FromIterator;
-use std::ops::{Deref, DerefMut};
 use functions::Functions;
+use std::error;
+use std::fmt::{Debug, Display, Formatter};
+use std::hash::Hash;
+use std::ops::{Deref, DerefMut};
+use im_rc::{HashMap, Vector};
 use types::EvalError::InvalidType;
 
 type Sym = String;
@@ -37,9 +36,7 @@ impl PartialEq<Self> for MalFloat {
     }
 }
 
-impl Eq for MalFloat {
-
-}
+impl Eq for MalFloat {}
 
 impl From<f64> for MalFloat {
     fn from(f: f64) -> Self {
@@ -47,29 +44,28 @@ impl From<f64> for MalFloat {
     }
 }
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct HashTrieMapWrapper(pub HashTrieMap<MalType, MalType>);
+pub struct HashMapWrapper(pub HashMap<MalType, MalType>);
 
-impl Hash for HashTrieMapWrapper {
+impl Hash for HashMapWrapper {
     fn hash<H: std::hash::Hasher>(&self, _state: &mut H) {
         panic!("should not be able to use Hash Map as a key since it is not hashable")
     }
 }
-impl Deref for HashTrieMapWrapper {
-    type Target = HashTrieMap<MalType, MalType>;
+impl Deref for HashMapWrapper {
+    type Target = HashMap<MalType, MalType>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl From<HashTrieMap<MalType, MalType>> for HashTrieMapWrapper {
-    fn from(h: HashTrieMap<MalType, MalType>) -> Self {
-        HashTrieMapWrapper(h)
+impl From<HashMap<MalType, MalType>> for HashMapWrapper {
+    fn from(h: HashMap<MalType, MalType>) -> Self {
+        HashMapWrapper(h)
     }
 }
 
-
-impl DerefMut for HashTrieMapWrapper {
+impl DerefMut for HashMapWrapper {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
@@ -81,39 +77,19 @@ pub enum MalType {
     Bool(bool),
     Integer(i64),
     Float(MalFloat),
-    List(List<MalType>),
+    List(Vector<MalType>),
     Symbol(Sym),
-    String(List<char>),
+    String(Vector<char>),
     Vector(Vector<MalType>),
-    HashMap(HashTrieMapWrapper),
+    HashMap(HashMap<MalType, MalType>),
     Function(Functions),
 }
 
-pub fn map_list<A: Clone, B, E>(mut list: List<A>, f: impl Fn(A) -> Result<B, E>) -> Result<List<B>, E> {
-    match list.first() {
-        None => {Ok(List::new())}
-        Some(head) => {
-            let tail = list.drop_first().unwrap();
-            let new_head = f(head.clone())?;
-            let new_tail = map_list(tail, f)?;
-            Ok(new_tail.push_front(new_head))
-        }
-    }
-}
-
-
 impl From<Vector<MalType>> for MalType {
-    fn from(v: Vector<MalType>) -> Self {
-        MalType::Vector(v)
-    }
-}
-
-impl From<List<MalType>> for MalType {
-    fn from(l: List<MalType>) -> Self {
+    fn from(l: Vector<MalType>) -> Self {
         MalType::List(l)
     }
 }
-
 
 impl MalType {
     pub fn as_key(self) -> EvalResult {
@@ -133,7 +109,7 @@ impl Into<ParseResult> for MalType {
 pub enum ParseError {
     NoClosingParen(char),
     InvalidNum(String),
-    MissingValue(MalType)
+    MissingValue(MalType),
 }
 
 #[derive(Debug, Clone)]
@@ -144,27 +120,26 @@ pub enum EvalError {
     SymbolNotFound(String),
 }
 
-
 impl Display for EvalError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             EvalError::InvalidHashKey(m) => write!(f, "Invalid hash key: {}", m),
             InvalidType(expected, actual) => write!(f, "Expected {}, got {}", expected, actual),
-            EvalError::WrongArgAmount => {write!(f, "Wrong number of arguments for the function")}
-            EvalError::SymbolNotFound(s) => {write!(f, "Symbol not found: {}", s)}
+            EvalError::WrongArgAmount => {
+                write!(f, "Wrong number of arguments for the function")
+            }
+            EvalError::SymbolNotFound(s) => {
+                write!(f, "Symbol not found: {}", s)
+            }
         }
     }
 }
 
-impl error::Error for EvalError {
+impl error::Error for EvalError {}
 
-}
+impl error::Error for ParseError {}
 
-impl error::Error for ParseError{
-
-}
-
-impl Display for ParseError{
+impl Display for ParseError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let intro_string = "you had the following ParseError: ";
         let error_string = match self {
@@ -182,7 +157,6 @@ impl Display for ParseError{
     }
 }
 
-
 impl MalType {
     pub fn type_string(&self) -> String {
         match self {
@@ -198,73 +172,103 @@ impl MalType {
             MalType::Function(_) => "function".to_string(),
         }
     }
-    pub fn to_symbol(self) -> MidResult<String>{
+    pub fn to_symbol(self) -> MidResult<String> {
         match self {
             MalType::Symbol(s) => Ok(s),
-            _ => Err(EvalError::InvalidType("symbol".to_string(), self.type_string()))
+            _ => Err(EvalError::InvalidType(
+                "symbol".to_string(),
+                self.type_string(),
+            )),
         }
     }
-    pub fn to_integer(&self) -> MidResult<i64>{
+    pub fn to_integer(&self) -> MidResult<i64> {
         match self {
             MalType::Integer(i) => Ok(*i),
-            _ => Err(EvalError::InvalidType("integer".to_string(), self.type_string()))
+            _ => Err(EvalError::InvalidType(
+                "integer".to_string(),
+                self.type_string(),
+            )),
         }
     }
-    pub fn coerce_to_integer(&self) -> MidResult<i64>{
+    pub fn coerce_to_integer(&self) -> MidResult<i64> {
         match self {
             MalType::Integer(i) => Ok(*i),
             MalType::Float(f) => Ok(f.0 as i64),
-            _ => Err(EvalError::InvalidType("integer".to_string(), self.type_string()))
+            _ => Err(EvalError::InvalidType(
+                "integer".to_string(),
+                self.type_string(),
+            )),
         }
     }
-    pub fn to_float(&self) -> MidResult<f64>{
+    pub fn to_float(&self) -> MidResult<f64> {
         match self {
             MalType::Float(f) => Ok(f.0),
             MalType::Integer(i) => Ok(*i as f64),
-            _ => Err(EvalError::InvalidType("float".to_string(), self.type_string()))
+            _ => Err(EvalError::InvalidType(
+                "float".to_string(),
+                self.type_string(),
+            )),
         }
     }
-    pub fn to_bool(&self) -> MidResult<bool>{
+    pub fn to_bool(&self) -> MidResult<bool> {
         match self {
             MalType::Bool(b) => Ok(*b),
-            _ => Err(EvalError::InvalidType("bool".to_string(), self.type_string()))
+            _ => Err(EvalError::InvalidType(
+                "bool".to_string(),
+                self.type_string(),
+            )),
         }
     }
-    pub fn to_list(self) -> MidResult<List<MalType>>{
+    pub fn to_list(self) -> MidResult<Vector<MalType>> {
         match self {
             MalType::List(l) => Ok(l),
-            _ => Err(EvalError::InvalidType("list".to_string(), self.type_string()))
+            _ => Err(EvalError::InvalidType(
+                "list".to_string(),
+                self.type_string(),
+            )),
         }
     }
-    pub fn to_vector(self) -> MidResult<Vector<MalType>>{
+    pub fn to_vector(self) -> MidResult<Vector<MalType>> {
         match self {
             MalType::Vector(v) => Ok(v),
-            _ => Err(EvalError::InvalidType("vector".to_string(), self.type_string()))
+            _ => Err(EvalError::InvalidType(
+                "vector".to_string(),
+                self.type_string(),
+            )),
         }
     }
-    pub fn to_hash_map(self) -> MidResult<HashTrieMapWrapper>{
+    pub fn to_hash_map(self) -> MidResult<HashMap<MalType, MalType>> {
         match self {
             MalType::HashMap(h) => Ok(h),
-            _ => Err(EvalError::InvalidType("hash-map".to_string(), self.type_string()))
+            _ => Err(EvalError::InvalidType(
+                "hash-map".to_string(),
+                self.type_string(),
+            )),
         }
     }
-    pub fn to_mal_string(self) -> MidResult<List<char>>{
+    pub fn to_mal_string(self) -> MidResult<Vector<char>> {
         match self {
             MalType::String(s) => Ok(s),
-            _ => Err(EvalError::InvalidType("string".to_string(), self.type_string()))
+            _ => Err(EvalError::InvalidType(
+                "string".to_string(),
+                self.type_string(),
+            )),
         }
     }
-    pub fn to_function(self) -> MidResult<Functions>{
+    pub fn to_function(self) -> MidResult<Functions> {
         match self {
             MalType::Function(f) => Ok(f),
-            _ => Err(EvalError::InvalidType("function".to_string(), self.type_string()))
+            _ => Err(EvalError::InvalidType(
+                "function".to_string(),
+                self.type_string(),
+            )),
         }
     }
     pub fn is_hashable(&self) -> bool {
         match self {
             MalType::Float(_) => false,
             MalType::HashMap(_) => false,
-            _ => true
+            _ => true,
         }
     }
 }

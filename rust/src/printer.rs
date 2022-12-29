@@ -1,4 +1,4 @@
-use std::fmt::{Display, Formatter, write};
+use std::fmt::{Display, Formatter};
 use types::MalType;
 use types::MalType::Float;
 
@@ -10,24 +10,27 @@ impl Display for MalType {
             MalType::Integer(n) => write!(f, "{}", n),
             Float(n) => write!(f, "{}", n.0),
             MalType::List(l) => {
-                let inner = &l.iter()
-                        .map(|m| m.to_string())
-                        .collect::<Vec<String>>()
-                        .join(" ");
+                let inner = &l
+                    .iter()
+                    .map(|m| m.to_string())
+                    .collect::<Vec<String>>()
+                    .join(" ");
                 write!(f, "({})", inner)
             }
             MalType::Vector(v) => {
-                let inner = &v.iter()
-                        .map(|m| m.to_string())
-                        .collect::<Vec<String>>()
-                        .join(" ");
+                let inner = &v
+                    .iter()
+                    .map(|m| m.to_string())
+                    .collect::<Vec<String>>()
+                    .join(" ");
                 write!(f, "[{}]", inner)
             }
             MalType::HashMap(h) => {
-                let inner = &h.iter()
-                        .map(|(k, v)| format!("{} {}", k.to_string(), v.to_string()))
-                        .collect::<Vec<String>>()
-                        .join(" ");
+                let inner = &h
+                    .iter()
+                    .map(|(k, v)| format!("{} {}", k.to_string(), v.to_string()))
+                    .collect::<Vec<String>>()
+                    .join(" ");
                 write!(f, "{{{}}}", inner)
             }
             MalType::Symbol(s) => write!(f, "{}", s),
@@ -38,7 +41,9 @@ impl Display for MalType {
                 let string = string.replace("\\\"", "\"");
                 write!(f, "{}", string)
             }
-            MalType::Function(_) => {write!(f, "function")}
+            MalType::Function(_) => {
+                write!(f, "function")
+            }
         }
     }
 }

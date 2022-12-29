@@ -1,7 +1,7 @@
 extern crate mal_rust;
 use mal_rust::reader::*;
 use mal_rust::types::*;
-use std::{error};
+use std::error;
 use std::fs::File;
 type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 fn read(input: String) -> ParseResult {
@@ -29,12 +29,16 @@ fn main() {
                 rl.add_history_entry(i.as_str());
                 i
             }
-            Err(_) => {break}
+            Err(_) => break,
         };
         let result = rep(input);
         match result {
-            Ok(a) => {println!("{}", a)}
-            Err(e) => {println!(" {}", e)}
+            Ok(a) => {
+                println!("{}", a)
+            }
+            Err(e) => {
+                println!(" {}", e)
+            }
         }
     }
     rl.save_history("history.txt").unwrap();
