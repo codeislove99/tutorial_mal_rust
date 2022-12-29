@@ -1,4 +1,4 @@
-use std::fmt::{Display, Formatter};
+use std::fmt::{Display, Formatter, write};
 use types::MalType;
 use types::MalType::Float;
 
@@ -38,6 +38,7 @@ impl Display for MalType {
                 let string = string.replace("\\\"", "\"");
                 write!(f, "{}", string)
             }
+            MalType::Function(_) => {write!(f, "function")}
         }
     }
 }

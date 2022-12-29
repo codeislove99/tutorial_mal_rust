@@ -42,8 +42,6 @@ fn read_form(reader: & mut Reader) -> ParseResult {
         quote_name(reader, "splice-unquote")
     } else if head == "@" {
         quote_name(reader, "deref")
-    } else if head == "^" {
-        quote_name(reader, "with-meta")
     } else{
         read_atom(reader)
     }
