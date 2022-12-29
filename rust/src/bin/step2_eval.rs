@@ -5,7 +5,8 @@ use mal_rust::reader::*;
 use mal_rust::types::*;
 use std::{error};
 use std::fs::File;
-use rpds::List;
+use std::iter::FromIterator;
+use rpds::{HashTrieMap, List, Vector};
 use mal_rust::env::Env;
 use mal_rust::functions::default_env;
 use mal_rust::types::EvalError::SymbolNotFound;
@@ -35,6 +36,26 @@ fn eval_ast(ast: MalType, env: &Env) -> EvalResult {
         MalType::List(l) => {
             Ok(MalType::List(map_list(l, |x| eval(x, env))?))
             }
+        MalType::Vector(v) => {
+            let mut vec = Vec::new();
+            for i in v.into_iter(){
+                vec.push(eval(i.clone(), env)?);
+            }
+            Ok(MalType::Vector(Vector::from_iter(vec)))
+        }
+        MalType::HashMap(h) => {
+            let mut map = HashTrieMap::new();
+            for (key, value) in h.into_iter(){
+                let k = eval(key.clone(), env)?;
+                if !k.is_hashable(){
+                    return Err(EvalError::InvalidHashKey(k));
+                }
+                let value = eval(value.clone(), env)?;
+                map.insert_mut(k, value);
+            }
+            Ok(MalType::HashMap(map.into()))
+
+        }
         other => {Ok(other)}
     }
 }
@@ -63,7 +84,7 @@ fn main() {
         let result = rep(input);
         match result {
             Ok(a) => {println!("{}", a)}
-            Err(e) => {println!(" {}", e)}
+            Err(e) => {println!("{}", e)}
         }
     }
     rl.save_history("history.txt").unwrap();

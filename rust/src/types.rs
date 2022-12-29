@@ -2,6 +2,7 @@ use std::error;
 use rpds::{HashTrieMap, List, Vector};
 use std::fmt::{Debug, Display, Formatter, write};
 use std::hash::{Hash};
+use std::iter::FromIterator;
 use std::ops::{Deref, DerefMut};
 use functions::Functions;
 use types::EvalError::InvalidType;
@@ -257,6 +258,13 @@ impl MalType {
         match self {
             MalType::Function(f) => Ok(f),
             _ => Err(EvalError::InvalidType("function".to_string(), self.type_string()))
+        }
+    }
+    pub fn is_hashable(&self) -> bool {
+        match self {
+            MalType::Float(_) => false,
+            MalType::HashMap(_) => false,
+            _ => true
         }
     }
 }
