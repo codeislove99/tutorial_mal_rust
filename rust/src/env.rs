@@ -2,7 +2,10 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ops::Deref;
 use std::rc::Rc;
+use im_rc::Vector;
 use MalType;
+use types::EvalError;
+use types::EvalError::WrongArgAmount;
 
 pub struct InnerEnv {
     data: RefCell<HashMap<String, MalType>>,
@@ -54,5 +57,25 @@ impl Env {
                 outer: Some(self.clone())
             })
         }
+    }
+    pub fn bind2(& self, symbols: MalType, values: MalType) -> Result<(), EvalError>{
+        let mut symbols = symbols.to_list()?;
+        let values = values.to_list()?;
+        self.bind(symbols, values)
+    }
+
+    pub fn bind(& self, symbols: Vector<MalType>, values: Vector<MalType>) -> Result<(), EvalError>{
+        if symbols.len() != values.len(){
+            return Err(WrongArgAmount)
+        }
+        for (symbol, value) in symbols.into_iter().zip(values.into_iter()){
+            self.set(symbol.to_symbol()?, value)
+        }
+        Ok(())
+    }
+    pub fn new_bind(& self, symbols: Vector<MalType>, values: Vector<MalType>) -> Result<Self, EvalError>{
+        let mut new_env = self.new_env();
+        new_env.bind(symbols, values)?;
+        Ok(new_env)
     }
 }

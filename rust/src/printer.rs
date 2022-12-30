@@ -42,7 +42,7 @@ impl Display for MalType {
                 write!(f, "{}", string)
             }
             MalType::Function(_) => {
-                write!(f, "function")
+                write!(f, "#<function>")
             }
         }
     }

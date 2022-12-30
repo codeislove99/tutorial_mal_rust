@@ -3,6 +3,7 @@ use std::error;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
 use std::ops::{Deref};
+use std::rc::Rc;
 use im_rc::{HashMap, Vector};
 use types::EvalError::InvalidType;
 
@@ -57,6 +58,16 @@ pub enum MalType {
     Vector(Vector<MalType>),
     HashMap(HashMap<MalType, MalType>),
     Function(Functions),
+}
+
+impl From<Rc<Fn(Vector<MalType>) -> EvalResult>> for MalType {
+    fn from(f: Rc<Fn(Vector<MalType>) -> EvalResult>) -> Self {
+        MalType::Function(
+            Functions::NonNative(
+                    f
+                )
+        )
+    }
 }
 
 impl From<Vector<MalType>> for MalType {
@@ -184,13 +195,11 @@ impl MalType {
             )),
         }
     }
-    pub fn to_bool(&self) -> MidResult<bool> {
+    pub fn to_bool(&self) -> bool {
         match self {
-            MalType::Bool(b) => Ok(*b),
-            _ => Err(EvalError::InvalidType(
-                "bool".to_string(),
-                self.type_string(),
-            )),
+            MalType::Bool(b) => *b,
+            MalType::Nil => false,
+            _ => true
         }
     }
     pub fn to_list(self) -> MidResult<Vector<MalType>> {

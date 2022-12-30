@@ -1,6 +1,7 @@
-extern crate mal_rust;
 extern crate im_rc;
+extern crate mal_rust;
 
+use im_rc::{HashMap, Vector};
 use mal_rust::env::Env;
 use mal_rust::functions::default_env;
 use mal_rust::reader::*;
@@ -10,7 +11,6 @@ use mal_rust::types::*;
 use std::error;
 use std::fs::File;
 use std::iter::FromIterator;
-use im_rc::{HashMap, Vector};
 
 type ResultBox<T> = std::result::Result<T, Box<dyn error::Error>>;
 fn read(input: String) -> ParseResult {

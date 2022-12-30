@@ -1,6 +1,9 @@
+use std::fmt::{Debug, Formatter};
 use env::Env;
 use std::hash::Hash;
+use std::rc::Rc;
 use im_rc::Vector;
+use functions::Functions::NonNative;
 use types::EvalError::WrongArgAmount;
 use types::EvalResult;
 use MalType;
@@ -8,16 +11,24 @@ use MalType::{Float, Integer};
 
 pub fn default_env() -> Env {
     let env = Env::new();
-    env.set("+".into(), Functions::new(add));
-    env.set("-".into(), Functions::new(subtract));
-    env.set("*".into(), Functions::new(times));
-    env.set("/".into(), Functions::new(int_divide));
+    env.set("+".into(), Functions::new_native(add));
+    env.set("-".into(), Functions::new_native(subtract));
+    env.set("*".into(), Functions::new_native(times));
+    env.set("/".into(), Functions::new_native(int_divide));
     env
 }
 type SimpleFn = fn(Vector<MalType>) -> EvalResult;
-#[derive(Clone, Debug)]
+
+#[derive(Clone)]
 pub enum Functions {
     Native(SimpleFn),
+    NonNative(Rc<Fn(Vector<MalType>) -> EvalResult>)
+}
+
+impl Debug for Functions{
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "#<function>")
+    }
 }
 
 impl PartialEq<Self> for Functions {
@@ -35,7 +46,7 @@ impl Hash for Functions {
 impl Eq for Functions {}
 
 impl Functions {
-    fn new(f: SimpleFn) -> MalType {
+    fn new_native(f: SimpleFn) -> MalType {
         MalType::Function(Functions::Native(f))
     }
 }
@@ -44,9 +55,11 @@ impl Functions {
     pub fn call(&self, args: Vector<MalType>) -> EvalResult {
         match self {
             Functions::Native(f) => f(args),
+            Functions::NonNative(f) => f(args)
         }
     }
 }
+
 
 pub fn add(args: Vector<MalType>) -> EvalResult {
     let mut result = Integer(0);
