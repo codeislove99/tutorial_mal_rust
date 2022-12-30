@@ -33,7 +33,7 @@ fn eval(ast: MalType, env: &Env) -> EvalResult {
                                 let value =
                                     eval(l.next().ok_or(EvalError::WrongArgAmount)?.clone(), env)?;
                                 env.set(key, value.clone());
-                                return Ok(Nil);
+                                return Ok(value);
                             }
                             "let*" => {
                                 let mut new_env = env;
