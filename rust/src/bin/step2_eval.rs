@@ -63,7 +63,7 @@ fn eval_ast(ast: MalType, env: &Env) -> EvalResult {
         MalType::Vector(v) => {
             let mut vec = Vector::new();
             for i in v.into_iter() {
-                vec.push_front(eval(i.clone(), env)?);
+                vec.push_back(eval(i.clone(), env)?);
             }
             Ok(MalType::Vector(vec))
         }

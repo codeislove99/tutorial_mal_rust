@@ -4,12 +4,11 @@ extern crate im_rc;
 use mal_rust::env::Env;
 use mal_rust::functions::default_env;
 use mal_rust::reader::*;
-use mal_rust::types::EvalError::SymbolNotFound;
+use mal_rust::types::EvalError::{SymbolNotFound, WrongArgAmount};
 use mal_rust::types::MalType::Nil;
 use mal_rust::types::*;
 use std::error;
 use std::fs::File;
-use std::iter::FromIterator;
 use im_rc::{HashMap, Vector};
 
 type ResultBox<T> = std::result::Result<T, Box<dyn error::Error>>;
@@ -26,8 +25,6 @@ fn eval(ast: MalType, env: &Env) -> EvalResult {
                     if let Ok(symbol) = head.clone().to_symbol() {
                         match symbol.as_str() {
                             "def!" => {
-                                let mut l = list.iter();
-                                l.next().expect("should have a value");
                                 let key = l
                                     .next()
                                     .ok_or(EvalError::WrongArgAmount)?
@@ -37,6 +34,15 @@ fn eval(ast: MalType, env: &Env) -> EvalResult {
                                     eval(l.next().ok_or(EvalError::WrongArgAmount)?.clone(), env)?;
                                 env.set(key, value.clone());
                                 return Ok(Nil);
+                            }
+                            "let*" => {
+                                let mut new_env = env;
+                                while let Some(k) = l.next()  {
+                                    let key = k.clone().to_symbol()?;
+                                    let value = eval(l.next().ok_or(WrongArgAmount)?.clone(), new_env)?;
+                                    new_env.set(key, value);
+                                    return Ok(Nil)
+                                }
                             }
                             _ => {}
                         }
@@ -63,7 +69,7 @@ fn eval_ast(ast: MalType, env: &Env) -> EvalResult {
         MalType::Vector(v) => {
             let mut vec = Vector::new();
             for i in v.into_iter() {
-                vec.push_front(eval(i.clone(), env)?);
+                vec.push_back(eval(i.clone(), env)?);
             }
             Ok(MalType::Vector(vec))
         }

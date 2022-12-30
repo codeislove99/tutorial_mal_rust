@@ -2,7 +2,7 @@ use functions::Functions;
 use std::error;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
-use std::ops::{Deref, DerefMut};
+use std::ops::{Deref};
 use im_rc::{HashMap, Vector};
 use types::EvalError::InvalidType;
 
@@ -43,33 +43,7 @@ impl From<f64> for MalFloat {
         MalFloat(f)
     }
 }
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub struct HashMapWrapper(pub HashMap<MalType, MalType>);
 
-impl Hash for HashMapWrapper {
-    fn hash<H: std::hash::Hasher>(&self, _state: &mut H) {
-        panic!("should not be able to use Hash Map as a key since it is not hashable")
-    }
-}
-impl Deref for HashMapWrapper {
-    type Target = HashMap<MalType, MalType>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl From<HashMap<MalType, MalType>> for HashMapWrapper {
-    fn from(h: HashMap<MalType, MalType>) -> Self {
-        HashMapWrapper(h)
-    }
-}
-
-impl DerefMut for HashMapWrapper {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
 
 #[derive(Eq, PartialEq, Hash, Debug, Clone)]
 pub enum MalType {

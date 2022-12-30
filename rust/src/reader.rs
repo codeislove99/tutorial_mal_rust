@@ -1,6 +1,6 @@
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::iter::{FromIterator, Peekable};
+use std::iter::{Peekable};
 use std::vec::IntoIter;
 use im_rc::{HashMap, Vector};
 use types::MalType::{Bool, Float, Integer, Nil, Symbol};
