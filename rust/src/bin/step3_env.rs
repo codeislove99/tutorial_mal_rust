@@ -5,7 +5,6 @@ use mal_rust::env::Env;
 use mal_rust::functions::default_env;
 use mal_rust::reader::*;
 use mal_rust::types::EvalError::{SymbolNotFound, WrongArgAmount};
-use mal_rust::types::MalType::Nil;
 use mal_rust::types::*;
 use std::error;
 use std::fs::File;
