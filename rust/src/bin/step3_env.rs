@@ -37,11 +37,12 @@ fn eval(ast: MalType, env: &Env) -> EvalResult {
                             }
                             "let*" => {
                                 let mut new_env = env;
-                                while let Some(k) = l.next()  {
+                                let mut first_parameter = l.next().ok_or(WrongArgAmount)?.clone().to_list()?.into_iter();
+                                while let Some(k) = first_parameter.next()  {
                                     let key = k.clone().to_symbol()?;
-                                    let value = eval(l.next().ok_or(WrongArgAmount)?.clone(), new_env)?;
+                                    let value = eval(first_parameter.next().ok_or(WrongArgAmount)?.clone(), new_env)?;
                                     new_env.set(key, value);
-                                    return Ok(Nil)
+                                    return eval(l.next().ok_or(WrongArgAmount)?.clone(), new_env)
                                 }
                             }
                             _ => {}
