@@ -42,8 +42,8 @@ fn eval(ast: MalType, env: &Env) -> EvalResult {
                                     let key = k.clone().to_symbol()?;
                                     let value = eval(first_parameter.next().ok_or(WrongArgAmount)?.clone(), &new_env)?;
                                     new_env.set(key, value);
-                                    return eval(l.next().ok_or(WrongArgAmount)?.clone(), &new_env)
                                 }
+                                return eval(l.next().ok_or(WrongArgAmount)?.clone(), &new_env)
                             }
                             _ => {}
                         }
