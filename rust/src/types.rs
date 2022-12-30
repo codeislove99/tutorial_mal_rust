@@ -196,6 +196,7 @@ impl MalType {
     pub fn to_list(self) -> MidResult<Vector<MalType>> {
         match self {
             MalType::List(l) => Ok(l),
+            MalType::Vector(l) => Ok(l),
             _ => Err(EvalError::InvalidType(
                 "list".to_string(),
                 self.type_string(),
