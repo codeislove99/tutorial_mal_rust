@@ -46,4 +46,13 @@ impl Env {
             None => None,
         }
     }
+
+    pub fn new_env(& self) -> Self{
+        Env{
+            0: Rc::new(InnerEnv {
+                data: RefCell::new(HashMap::new()),
+                outer: Some(self.clone())
+            })
+        }
+    }
 }
