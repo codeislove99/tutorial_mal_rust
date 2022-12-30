@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use functions::Functions;
 use std::error;
 use std::fmt::{Debug, Display, Formatter};
@@ -13,7 +14,7 @@ pub type ParseResult = Result<MalType, ParseError>;
 pub type EvalResult = Result<MalType, EvalError>;
 pub type MidResult<T> = Result<T, EvalError>;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialOrd)]
 pub struct MalFloat(pub f64);
 
 impl Deref for MalFloat {
@@ -46,7 +47,7 @@ impl From<f64> for MalFloat {
 }
 
 
-#[derive(Eq, PartialEq, Hash, Debug, Clone)]
+#[derive(Eq, PartialEq, Hash, Debug, Clone, PartialOrd)]
 pub enum MalType {
     Nil,
     Bool(bool),
