@@ -1,5 +1,7 @@
 extern crate mal_rust;
 extern crate im_rc;
+extern crate env_logger;
+extern crate log;
 
 use mal_rust::env::Env;
 use mal_rust::functions::{default_env, Functions};
@@ -9,8 +11,11 @@ use mal_rust::types::*;
 use std::error;
 use std::fs::File;
 use std::rc::Rc;
+use env_logger::{Builder, Target};
 use im_rc::{HashMap, Vector};
+use log::{debug, warn};
 use mal_rust::functions::Functions::NonNative;
+use mal_rust::logger;
 use mal_rust::types::MalType::Nil;
 
 type ResultBox<T> = std::result::Result<T, Box<dyn error::Error>>;
@@ -19,11 +24,12 @@ fn read(input: String) -> ParseResult {
 }
 
 fn eval(ast: MalType, env: &Env) -> EvalResult {
-    match ast {
+    let result = match ast {
         MalType::List(list) => {
             match list.head() {
                 None => Ok(list.into()),
                 Some(head) => {
+                    warn!("{}", MalType::List(list.clone()));
                     if let Ok(symbol) = head.clone().to_symbol() {
                         match symbol.as_str() {
                             "def!" => {
@@ -36,6 +42,7 @@ fn eval(ast: MalType, env: &Env) -> EvalResult {
                                     .to_symbol()?;
                                 let value =
                                     eval(l.next().ok_or(EvalError::WrongArgAmount)?.clone(), env)?;
+                                warn!("set {} to {}", key.clone(), value.clone());
                                 env.set(key, value.clone());
                                 Ok(value)
                             }
@@ -57,29 +64,31 @@ fn eval(ast: MalType, env: &Env) -> EvalResult {
                                 l.map(|m| eval_ast(m, env)).last().unwrap()
                             }
                             "if" => {
-                                let mut l = list.into_iter();
-                                l.next().unwrap();
-                                let cond = eval(l.next().ok_or(WrongArgAmount)?, env)?.to_bool();
-                                if cond{
-                                    eval(l.next().ok_or(WrongArgAmount)?, env)
+                                let mut l = list;
+                                l.pop_front().unwrap();
+                                let cond = eval(l.pop_front().ok_or(WrongArgAmount)?, env)?.to_bool();
+                                warn!("(if {} {} {})", cond.clone(), l[0].clone(), l.get(1).unwrap_or(&Nil));
+                                let result = if cond{
+                                    eval(l.pop_front().ok_or(WrongArgAmount)?, env)
                                 } else {
-                                    l.next().ok_or(WrongArgAmount)?;
-                                    match l.next() {
+                                    l.pop_front().ok_or(WrongArgAmount)?;
+                                    match l.pop_front() {
                                         None => {Ok(Nil)}
                                         Some(m) => {eval(m, env)}
                                     }
-                                }
+                                };
+                                result
                             }
                             "fn*" => {
                                 let mut l = list.into_iter();
                                 l.next().unwrap();
                                 let variables = l.next().ok_or(WrongArgAmount)?.to_list()?;
                                 let body = l.next().ok_or(WrongArgAmount)?;
-                                let env_copy = env.new_env();
+                                let env_copy = env.clone();
                                 Ok(MalType::Function(NonNative(Rc::new(
                                     move |m: Vector<MalType>| {
-                                        env_copy.bind(variables.clone(), m)?;
-                                        eval(body.clone(), &env_copy)
+                                        let env = env_copy.new_bind(variables.clone(), m)?;
+                                        eval(body.clone(), &env)
                                     }
                                 ))))
                             }
@@ -95,17 +104,29 @@ fn eval(ast: MalType, env: &Env) -> EvalResult {
             }
         }
         ast => eval_ast(ast, env),
-    }
+    };
+    result
 }
 
 fn call_with_first_as_func(list: Vector<MalType>, env: &Env) -> EvalResult{
     let mut new_list = eval_ast(list.into(), env)?.to_list().expect("should be a list");
+    warn!("{}", MalType::List(new_list.clone()));
     let first = new_list.pop_front().unwrap().to_function()?;
-    first.call(new_list)
+    let result = first.call(new_list);
+    warn!("{}", result.clone()?);
+    result
 }
 fn eval_ast(ast: MalType, env: &Env) -> EvalResult {
-    match ast {
-        MalType::Symbol(s) => env.get(&s).ok_or(SymbolNotFound(s)),
+    let ast_copy = ast.clone();
+    let result = match ast {
+        MalType::Symbol(s) => {
+            let result = env.get(&s).ok_or(SymbolNotFound(s.clone()))?;
+            match &result {
+                MalType::Function(_) => {}
+                _ => warn!("{} -> {}", s.clone(), result.clone()),
+            }
+            Ok(result)
+        }
         MalType::List(l) => {
             let mut vec = Vector::new();
             for i in l.into_iter() {
@@ -133,7 +154,8 @@ fn eval_ast(ast: MalType, env: &Env) -> EvalResult {
             Ok(MalType::HashMap(map.into()))
         }
         other => Ok(other),
-    }
+    };
+    result
 }
 
 fn print(evaluated_input: MalType) -> String {
@@ -145,6 +167,8 @@ fn rep(text: String, env: &Env) -> ResultBox<String> {
 }
 
 fn main() {
+    logger::init().unwrap();
+    warn!("does this work\n");
     let mut rl = rustyline::Editor::<()>::new().unwrap();
     let env = default_env();
     File::create("history.txt").unwrap();

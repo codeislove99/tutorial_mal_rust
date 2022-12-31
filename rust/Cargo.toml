@@ -8,3 +8,5 @@ regex = "1.7.0"
 lazy_static = "1.4.0"
 rustyline = "10.0.0"
 im-rc = "15.1.0"
+log = { version = "0.4", features = ["max_level_debug", "release_max_level_warn"] }
+env_logger = "0.10.0"
