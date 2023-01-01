@@ -1,4 +1,4 @@
-use std::fmt::{Display, Formatter};
+use std::fmt::{Display, format, Formatter};
 use types::MalType;
 use types::MalType::Float;
 
@@ -43,18 +43,16 @@ impl MalType {
             }
             MalType::Symbol(s) => s.to_string(),
             MalType::String(s) => {
-                if !print_readably {
-                    let string = s.iter().collect::<String>();
-                    let string = string.replace("\n", "\\n");
-                    let string = string.replace("\\", "\\\\");
-                    let mut string = string.replace("\"", "\\\"");
-                    string.push('"');
-                    string.insert(0, '"');
-                    string
+                if print_readably {
+                    let str: String = s.into_iter().map(|c| match c {
+                        '"' => "\\\"".to_string(),
+                        '\n' => "\\n".to_string(),
+                        '\\' => "\\\\".to_string(),
+                        _ => c.to_string(),
+                    }).collect();
+                    format!("\"{}\"", str)
                 } else {
-                    let mut string = s.iter().collect::<String>();
-                    string.push('"');
-                    string.insert(0, '"');
+                    let string = s.iter().collect::<String>();
                     string
                 }
             }
