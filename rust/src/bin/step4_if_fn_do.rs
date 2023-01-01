@@ -61,7 +61,10 @@ fn eval(ast: MalType, env: &Env) -> EvalResult {
                             "do" => {
                                 let mut l = list.into_iter();
                                 l.next().unwrap();
-                                l.map(|m| eval_ast(m, env)).last().unwrap()
+                                while l.len() > 1 {
+                                    eval(l.next().unwrap(), env)?;
+                                }
+                                eval(l.next().unwrap(), env)
                             }
                             "if" => {
                                 let mut l = list;
