@@ -25,6 +25,14 @@ impl MalType {
                     .join(" ");
                 format!("({})", inner)
             }
+            MalType::Vector(l)=> {
+                let inner = l
+                    .into_iter()
+                    .map(|m| m.pr_str(print_readably))
+                    .collect::<Vec<String>>()
+                    .join(" ");
+                format!("[{}]", inner)
+            }
             MalType::HashMap(h) => {
                 let inner = h
                     .into_iter()
