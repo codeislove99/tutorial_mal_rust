@@ -23,9 +23,9 @@ fn read(input: String) -> ParseResult {
 }
 
 fn eval(ast: MalType, env: &Env) -> EvalResult {
-    let ast = match ast {
+    let ast: MalType = match ast {
         MalType::List(list) => match list.head() {
-            None => Ok(list.into()),
+            None => list.into(),
             Some(head) => {
                 warn!("{}", MalType::List(list.clone()));
                 if let Ok(symbol) = head.clone().to_symbol() {
@@ -42,7 +42,7 @@ fn eval(ast: MalType, env: &Env) -> EvalResult {
                                 eval(l.next().ok_or(EvalError::WrongArgAmount)?.clone(), env)?;
                             warn!("set {} to {}", key.clone(), value.clone());
                             env.set(key, value.clone());
-                            Ok(value)
+                            value
                         }
                         "let*" => {
                             let mut l = list.into_iter();
@@ -62,7 +62,7 @@ fn eval(ast: MalType, env: &Env) -> EvalResult {
                                 )?;
                                 new_env.set(key, value);
                             }
-                            eval(l.next().ok_or(WrongArgAmount)?.clone(), &new_env)
+                            eval(l.next().ok_or(WrongArgAmount)?.clone(), &new_env)?
                         }
                         "do" => {
                             let mut l = list.into_iter();
@@ -70,7 +70,7 @@ fn eval(ast: MalType, env: &Env) -> EvalResult {
                             while l.len() > 1 {
                                 eval(l.next().unwrap(), env)?;
                             }
-                            eval(l.next().unwrap(), env)
+                            eval(l.next().unwrap(), env)?
                         }
                         "if" => {
                             let mut l = list;
@@ -91,7 +91,7 @@ fn eval(ast: MalType, env: &Env) -> EvalResult {
                                     Some(m) => eval(m, env),
                                 }
                             };
-                            result
+                            result?
                         }
                         "fn*" => {
                             let mut l = list.into_iter();
@@ -99,22 +99,22 @@ fn eval(ast: MalType, env: &Env) -> EvalResult {
                             let variables = l.next().ok_or(WrongArgAmount)?.to_list()?;
                             let body = l.next().ok_or(WrongArgAmount)?;
                             let env_copy = env.clone();
-                            Ok(MalType::Function(NonNative(Rc::new(
+                            MalType::Function(NonNative(Rc::new(
                                 move |m: Vector<MalType>| {
                                     let env = env_copy.new_bind(variables.clone(), m)?;
                                     eval(body.clone(), &env)
                                 },
-                            ))))
+                            )))
                         }
-                        _ => call_with_first_as_func(list, env),
+                        _ => call_with_first_as_func(list, env)?,
                     }
                 } else {
-                    call_with_first_as_func(list, env)
+                    call_with_first_as_func(list, env)?
                 }
             }
         },
-        ast => eval_ast(ast, env),
-    }?;
+        ast => eval_ast(ast, env)?,
+    };
     Ok(ast)
 }
 
