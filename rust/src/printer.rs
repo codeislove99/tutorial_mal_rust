@@ -43,7 +43,7 @@ impl MalType {
             }
             MalType::Symbol(s) => s.to_string(),
             MalType::String(s) => {
-                if print_readably {
+                if !print_readably {
                     let string = s.iter().collect::<String>();
                     let string = string.replace("\n", "\\n");
                     let string = string.replace("\\", "\\\\");
