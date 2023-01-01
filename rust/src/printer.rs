@@ -43,14 +43,18 @@ impl MalType {
             }
             MalType::Symbol(s) => s.to_string(),
             MalType::String(s) => {
-                if !print_readably {
+                if print_readably {
                     let string = s.iter().collect::<String>();
-                    let string = string.replace("\\n", "\n");
-                    let string = string.replace("\\\\", "\\");
-                    let string = string.replace("\\\"", "\"");
+                    let string = string.replace("\n", "\\n");
+                    let string = string.replace("\\", "\\\\");
+                    let mut string = string.replace("\"", "\\\"");
+                    string.push('"');
+                    string.insert(0, '"');
                     string
                 } else {
-                    let string = s.iter().collect::<String>();
+                    let mut string = s.iter().collect::<String>();
+                    string.push('"');
+                    string.insert(0, '"');
                     string
                 }
             }

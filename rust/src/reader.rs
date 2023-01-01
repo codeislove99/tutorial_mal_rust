@@ -81,7 +81,13 @@ fn read_atom(reader: &mut Reader) -> ParseResult {
         if head.chars().last().unwrap() != '"' {
             return Err(ParseError::NoClosingParen('"'));
         }
-        MalType::String(head.chars().collect::<Vector<char>>()).into()
+        let head = head.as_str()[1..head.len() - 1].to_string();
+        let h = head
+            .replace("\\\"", "\"")
+            .replace("\\n", "\n")
+            .replace("\\\\", "\\");
+
+        MalType::String(h.chars().collect::<Vector<char>>()).into()
     } else {
         Symbol(head.clone()).into()
     }

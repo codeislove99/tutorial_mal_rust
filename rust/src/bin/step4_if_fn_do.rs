@@ -179,6 +179,7 @@ fn rep(text: String, env: &Env) -> ResultBox<String> {
 }
 
 fn main() {
+    println!("{}", "hello".to_string());
     let mut rl = rustyline::Editor::<()>::new().unwrap();
     let env = default_env();
     default_env_non_native().into_iter().for_each(
