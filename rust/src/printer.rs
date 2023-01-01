@@ -17,7 +17,7 @@ impl MalType {
             MalType::Bool(bool) => bool.to_string(),
             MalType::Integer(n) => n.to_string(),
             Float(n) => n.0.to_string(),
-            MalType::List(l) | MalType::Vector(l)=> {
+            MalType::List(l) => {
                 let inner = l
                     .into_iter()
                     .map(|m| m.pr_str(print_readably))
