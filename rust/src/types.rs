@@ -1,11 +1,10 @@
-use std::cmp::Ordering;
 use functions::Functions;
+use im_rc::{HashMap, Vector};
 use std::error;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
-use std::ops::{Deref};
+use std::ops::Deref;
 use std::rc::Rc;
-use im_rc::{HashMap, Vector};
 use types::EvalError::InvalidType;
 
 type Sym = String;
@@ -46,7 +45,6 @@ impl From<f64> for MalFloat {
     }
 }
 
-
 #[derive(Eq, PartialEq, Hash, Debug, Clone, PartialOrd)]
 pub enum MalType {
     Nil,
@@ -61,15 +59,18 @@ pub enum MalType {
     Function(Functions),
 }
 
-impl From<Rc<Fn(Vector<MalType>) -> EvalResult>> for MalType {
-    fn from(f: Rc<Fn(Vector<MalType>) -> EvalResult>) -> Self {
-        MalType::Function(
-            Functions::NonNative(
-                    f
-                )
-        )
+impl From<Rc<dyn Fn(Vector<MalType>) -> EvalResult>> for MalType {
+    fn from(f: Rc<dyn Fn(Vector<MalType>) -> EvalResult>) -> Self {
+        MalType::Function(Functions::NonNative(f))
     }
 }
+
+impl From<String>  for MalType {
+    fn from(s: String) -> Self {
+        MalType::String(s.chars().collect())
+    }
+}
+
 
 impl From<Vector<MalType>> for MalType {
     fn from(l: Vector<MalType>) -> Self {
@@ -200,7 +201,7 @@ impl MalType {
         match self {
             MalType::Bool(b) => *b,
             MalType::Nil => false,
-            _ => true
+            _ => true,
         }
     }
     pub fn to_list(self) -> MidResult<Vector<MalType>> {

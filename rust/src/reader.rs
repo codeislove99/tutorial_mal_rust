@@ -1,8 +1,8 @@
+use im_rc::{HashMap, Vector};
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::iter::{Peekable};
+use std::iter::Peekable;
 use std::vec::IntoIter;
-use im_rc::{HashMap, Vector};
 use types::MalType::{Bool, Float, Integer, Nil, Symbol};
 use types::ParseError::NoClosingParen;
 use types::{MalType, ParseError, ParseResult};
@@ -87,7 +87,6 @@ fn read_atom(reader: &mut Reader) -> ParseResult {
     }
 }
 
-
 fn read_vector(reader: &mut Reader, end: char) -> Result<Vector<MalType>, ParseError> {
     // println!("{:?} listhelper", reader);
     reader.next().unwrap();
@@ -95,7 +94,7 @@ fn read_vector(reader: &mut Reader, end: char) -> Result<Vector<MalType>, ParseE
     loop {
         if reader.peek().ok_or(NoClosingParen(end))? == end.to_string().as_str() {
             reader.next().unwrap();
-            break
+            break;
         } else {
             result.push_back(read_form(reader)?)
         }

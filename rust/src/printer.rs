@@ -4,45 +4,50 @@ use types::MalType::Float;
 
 impl Display for MalType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.clone().pr_str(true))
+    }
+}
+
+
+impl MalType {
+
+    pub fn pr_str(self, print_readably: bool) -> String {
         match self {
-            MalType::Nil => write!(f, "nil"),
-            MalType::Bool(bool) => write!(f, "{}", bool),
-            MalType::Integer(n) => write!(f, "{}", n),
-            Float(n) => write!(f, "{}", n.0),
-            MalType::List(l) => {
-                let inner = &l
-                    .iter()
-                    .map(|m| m.to_string())
+            MalType::Nil => "nil".to_string(),
+            MalType::Bool(bool) => bool.to_string(),
+            MalType::Integer(n) => n.to_string(),
+            Float(n) => n.0.to_string(),
+            MalType::List(l) | MalType::Vector(l)=> {
+                let inner = l
+                    .into_iter()
+                    .map(|m| m.pr_str(print_readably))
                     .collect::<Vec<String>>()
                     .join(" ");
-                write!(f, "({})", inner)
-            }
-            MalType::Vector(v) => {
-                let inner = &v
-                    .iter()
-                    .map(|m| m.to_string())
-                    .collect::<Vec<String>>()
-                    .join(" ");
-                write!(f, "[{}]", inner)
+                format!("({})", inner)
             }
             MalType::HashMap(h) => {
-                let inner = &h
-                    .iter()
-                    .map(|(k, v)| format!("{} {}", k.to_string(), v.to_string()))
+                let inner = h
+                    .into_iter()
+                    .map(|(k, v)| format!("{} {}", k.pr_str(print_readably), v.pr_str(print_readably)))
                     .collect::<Vec<String>>()
                     .join(" ");
-                write!(f, "{{{}}}", inner)
+                format!("{{{}}}", inner)
             }
-            MalType::Symbol(s) => write!(f, "{}", s),
+            MalType::Symbol(s) => s.to_string(),
             MalType::String(s) => {
-                let string = s.iter().collect::<String>();
-                let string = string.replace("\\n", "\n");
-                let string = string.replace("\\\\", "\\");
-                let string = string.replace("\\\"", "\"");
-                write!(f, "{}", string)
+                if print_readably {
+                    let string = s.iter().collect::<String>();
+                    let string = string.replace("\\n", "\n");
+                    let string = string.replace("\\\\", "\\");
+                    let string = string.replace("\\\"", "\"");
+                    string
+                } else {
+                    let string = s.iter().collect::<String>();
+                    string
+                }
             }
             MalType::Function(_) => {
-                write!(f, "#<function>")
+                "#<function>".to_string()
             }
         }
     }
