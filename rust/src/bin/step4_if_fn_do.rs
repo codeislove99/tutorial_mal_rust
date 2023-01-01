@@ -23,7 +23,7 @@ fn read(input: String) -> ParseResult {
 }
 
 fn eval(ast: MalType, env: &Env) -> EvalResult {
-    let result = match ast {
+    let ast = match ast {
         MalType::List(list) => match list.head() {
             None => Ok(list.into()),
             Some(head) => {
@@ -114,8 +114,8 @@ fn eval(ast: MalType, env: &Env) -> EvalResult {
             }
         },
         ast => eval_ast(ast, env),
-    };
-    result
+    }?;
+    Ok(ast)
 }
 
 fn call_with_first_as_func(list: Vector<MalType>, env: &Env) -> EvalResult {
