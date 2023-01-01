@@ -93,9 +93,9 @@ fn parse_str(s: String) -> Vector<char>{
     chars.next().unwrap();
     while let Some(c) = chars.next() {
         if c == '\\' {
-            match chars.next() {
-                Some('n') => v.push_back('\n'),
-                _ => v.push_back(c),
+            match chars.next().unwrap() {
+                'n' => v.push_back('\n'),
+                next => v.push_back(next),
             }
         } else {
             v.push_back(c);
