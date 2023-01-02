@@ -87,7 +87,7 @@ fn read_atom(reader: &mut Reader) -> ParseResult {
     }
 }
 
-fn parse_str(s: String) -> Vector<char>{
+fn parse_str(s: String) -> Vector<char> {
     let mut v = Vector::new();
     let mut chars = s.chars();
     chars.next().unwrap();

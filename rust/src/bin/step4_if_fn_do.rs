@@ -4,7 +4,7 @@ extern crate log;
 extern crate mal_rust;
 
 use im_rc::{HashMap, Vector};
-use log::{warn};
+use log::warn;
 use mal_rust::env::Env;
 use mal_rust::functions::Functions::NonNative;
 use mal_rust::functions::{default_env, default_env_non_native};
@@ -99,12 +99,10 @@ fn eval(ast: MalType, env: &Env) -> EvalResult {
                             let variables = l.next().ok_or(WrongArgAmount)?.to_list()?;
                             let body = l.next().ok_or(WrongArgAmount)?;
                             let env_copy = env.clone();
-                            MalType::Function(NonNative(Rc::new(
-                                move |m: Vector<MalType>| {
-                                    let env = env_copy.new_bind(variables.clone(), m)?;
-                                    eval(body.clone(), &env)
-                                },
-                            )))
+                            MalType::Function(NonNative(Rc::new(move |m: Vector<MalType>| {
+                                let env = env_copy.new_bind(variables.clone(), m)?;
+                                eval(body.clone(), &env)
+                            })))
                         }
                         _ => call_with_first_as_func(list, env)?,
                     }
@@ -173,7 +171,6 @@ fn print(evaluated_input: MalType) -> String {
     evaluated_input.pr_str(true)
 }
 
-
 fn rep(text: String, env: &Env) -> ResultBox<String> {
     Ok(print(eval(read(text)?, env)?))
 }
@@ -182,11 +179,9 @@ fn main() {
     println!("{}", "hello".to_string());
     let mut rl = rustyline::Editor::<()>::new().unwrap();
     let env = default_env();
-    default_env_non_native().into_iter().for_each(
-        |s| {
-            rep(s, &env).unwrap();
-        }
-    );
+    default_env_non_native().into_iter().for_each(|s| {
+        rep(s, &env).unwrap();
+    });
     File::create("history.txt").unwrap();
     rl.load_history("history.txt").unwrap();
     logger::init().unwrap();

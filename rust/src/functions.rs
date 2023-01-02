@@ -1,7 +1,7 @@
 use env::Env;
 use im_rc::Vector;
 use std::fmt::{Debug, Formatter};
-use std::hash::Hash;
+use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 use types::EvalError::WrongArgAmount;
 use types::{EvalError, EvalResult};
@@ -12,7 +12,6 @@ pub fn default_env_non_native() -> Vec<String> {
     let mut v = Vec::new();
     v.push("(def! not (fn* (a) (if a false true)))");
     v.iter().map(|s| s.to_string()).collect()
-
 }
 pub fn default_env() -> Env {
     let env = Env::new();
@@ -47,6 +46,46 @@ type SimpleFn = fn(Vector<MalType>) -> EvalResult;
 pub enum Functions {
     Native(SimpleFn),
     NonNative(Rc<dyn Fn(Vector<MalType>) -> EvalResult>),
+}
+
+impl Debug for InnerFunction {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?} -> {}", self.params, self.ast)
+    }
+}
+
+pub struct InnerFunction {
+    pub ast: MalType,
+    pub params: Vector<MalType>,
+    pub env: Env,
+}
+
+impl Into<EvalResult> for InnerFunction{
+    fn into(self) -> EvalResult {
+        Ok(MalType::NonNativeFunction(Rc::new(self)))
+    }
+}
+
+impl PartialOrd for InnerFunction {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        None
+    }
+}
+
+impl Hash for InnerFunction {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        panic!("InnerFunction is not hashable and should never be able to be hashed");
+    }
+}
+
+impl PartialEq<Self> for InnerFunction {
+    fn eq(&self, other: &Self) -> bool {
+        false
+    }
+}
+
+impl Eq for InnerFunction {
+
 }
 
 impl PartialOrd for Functions {
@@ -208,7 +247,11 @@ fn println(args: Vector<MalType>) -> EvalResult {
 }
 
 fn join(args: Vector<MalType>, sep: &str, print: bool, readably: bool) -> EvalResult {
-    let s = args.into_iter().map(|x| x.pr_str(readably)).collect::<Vec<String>>().join(sep);
+    let s = args
+        .into_iter()
+        .map(|x| x.pr_str(readably))
+        .collect::<Vec<String>>()
+        .join(sep);
     if print {
         println!("{}", s);
         Ok(Nil)
@@ -216,5 +259,3 @@ fn join(args: Vector<MalType>, sep: &str, print: bool, readably: bool) -> EvalRe
         Ok(s.into())
     }
 }
-
-

@@ -1,4 +1,4 @@
-use functions::Functions;
+use functions::{Functions, InnerFunction};
 use im_rc::{HashMap, Vector};
 use std::error;
 use std::fmt::{Debug, Display, Formatter};
@@ -57,6 +57,7 @@ pub enum MalType {
     Vector(Vector<MalType>),
     HashMap(HashMap<MalType, MalType>),
     Function(Functions),
+    NonNativeFunction(Rc<InnerFunction>),
 }
 
 impl From<Rc<dyn Fn(Vector<MalType>) -> EvalResult>> for MalType {
@@ -65,12 +66,11 @@ impl From<Rc<dyn Fn(Vector<MalType>) -> EvalResult>> for MalType {
     }
 }
 
-impl From<String>  for MalType {
+impl From<String> for MalType {
     fn from(s: String) -> Self {
         MalType::String(s.chars().collect())
     }
 }
-
 
 impl From<Vector<MalType>> for MalType {
     fn from(l: Vector<MalType>) -> Self {
@@ -157,6 +157,7 @@ impl MalType {
             MalType::Vector(_) => "vector".to_string(),
             MalType::HashMap(_) => "hash-map".to_string(),
             MalType::Function(_) => "function".to_string(),
+            MalType::NonNativeFunction(_) => "function".to_string(),
         }
     }
     pub fn to_symbol(self) -> MidResult<String> {

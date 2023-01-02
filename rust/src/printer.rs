@@ -8,9 +8,7 @@ impl Display for MalType {
     }
 }
 
-
 impl MalType {
-
     pub fn pr_str(self, print_readably: bool) -> String {
         match self {
             MalType::Nil => "nil".to_string(),
@@ -25,7 +23,7 @@ impl MalType {
                     .join(" ");
                 format!("({})", inner)
             }
-            MalType::Vector(l)=> {
+            MalType::Vector(l) => {
                 let inner = l
                     .into_iter()
                     .map(|m| m.pr_str(print_readably))
@@ -36,7 +34,9 @@ impl MalType {
             MalType::HashMap(h) => {
                 let inner = h
                     .into_iter()
-                    .map(|(k, v)| format!("{} {}", k.pr_str(print_readably), v.pr_str(print_readably)))
+                    .map(|(k, v)| {
+                        format!("{} {}", k.pr_str(print_readably), v.pr_str(print_readably))
+                    })
                     .collect::<Vec<String>>()
                     .join(" ");
                 format!("{{{}}}", inner)
@@ -44,21 +44,23 @@ impl MalType {
             MalType::Symbol(s) => s.to_string(),
             MalType::String(s) => {
                 if print_readably {
-                    let str: String = s.into_iter().map(|c| match c {
-                        '"' => "\\\"".to_string(),
-                        '\n' => "\\n".to_string(),
-                        '\\' => "\\\\".to_string(),
-                        _ => c.to_string(),
-                    }).collect();
+                    let str: String = s
+                        .into_iter()
+                        .map(|c| match c {
+                            '"' => "\\\"".to_string(),
+                            '\n' => "\\n".to_string(),
+                            '\\' => "\\\\".to_string(),
+                            _ => c.to_string(),
+                        })
+                        .collect();
                     format!("\"{}\"", str)
                 } else {
                     let string = s.iter().collect::<String>();
                     string
                 }
             }
-            MalType::Function(_) => {
-                "#<function>".to_string()
-            }
+            MalType::Function(_) => "#<function>".to_string(),
+            MalType::NonNativeFunction(_) => "#<function>".to_string(),
         }
     }
 }

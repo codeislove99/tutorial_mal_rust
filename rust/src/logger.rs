@@ -1,4 +1,4 @@
-use log::Level::{Warn};
+use log::Level::Warn;
 use log::{Log, Metadata, Record};
 
 pub struct MalLogger;
