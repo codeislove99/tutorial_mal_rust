@@ -6,7 +6,6 @@ extern crate mal_rust;
 use im_rc::{HashMap, Vector};
 use log::warn;
 use mal_rust::env::Env;
-use mal_rust::functions::Functions::NonNative;
 use mal_rust::functions::{default_env, default_env_non_native, InnerFunction};
 use mal_rust::logger;
 use mal_rust::reader::*;
@@ -15,7 +14,6 @@ use mal_rust::types::MalType::{List, Nil};
 use mal_rust::types::*;
 use std::error;
 use std::fs::File;
-use std::rc::Rc;
 
 type ResultBox<T> = std::result::Result<T, Box<dyn error::Error>>;
 fn read(input: String) -> ParseResult {
@@ -143,19 +141,8 @@ fn eval(mut ast: MalType, mut env: Env) -> EvalResult {
             ast => return eval_ast(ast, &env),
         };
     }
-    Ok(ast)
 }
 
-fn call_with_first_as_func(list: Vector<MalType>, env: &Env) -> EvalResult {
-    let mut new_list = eval_ast(list.into(), env)?
-        .to_list()
-        .expect("should be a list");
-    warn!("{}", MalType::List(new_list.clone()));
-    let first = new_list.pop_front().unwrap().to_function()?;
-    let result = first.call(new_list);
-    warn!("{}", result.clone()?);
-    result
-}
 fn eval_ast(ast: MalType, env: &Env) -> EvalResult {
     let result = match ast {
         MalType::Symbol(s) => {

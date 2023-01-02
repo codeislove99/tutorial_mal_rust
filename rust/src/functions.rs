@@ -67,19 +67,19 @@ impl Into<EvalResult> for InnerFunction{
 }
 
 impl PartialOrd for InnerFunction {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, _other: &Self) -> Option<std::cmp::Ordering> {
         None
     }
 }
 
 impl Hash for InnerFunction {
-    fn hash<H: Hasher>(&self, state: &mut H) {
+    fn hash<H: Hasher>(&self, _state: &mut H) {
         panic!("InnerFunction is not hashable and should never be able to be hashed");
     }
 }
 
 impl PartialEq<Self> for InnerFunction {
-    fn eq(&self, other: &Self) -> bool {
+    fn eq(&self, _other: &Self) -> bool {
         false
     }
 }
