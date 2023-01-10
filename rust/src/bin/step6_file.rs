@@ -236,13 +236,14 @@ fn main() {
 fn swap(mut args: Vector<MalType>) -> EvalResult {
     let first = args.pop_front().ok_or(WrongArgAmount)?.to_atom()?;
     let second = args.pop_front().ok_or(WrongArgAmount)?;
+    args.push_front(first.clone().get_value());
     let result = match second {
         MalType::Function(f) => {
-            f.call(vector![first.clone().get_value()])
+            f.call(args)
         }
         MalType::NonNativeFunction(f) => {
             let ast = f.ast.clone();
-            let env = f.env.new_bind(f.params.clone(), vector![first.clone().get_value()])?;
+            let env = f.env.new_bind(f.params.clone(), args)?;
             eval(ast, env)
         }
         _ => return Err(EvalError::InvalidType("function".to_string(), second.type_string()))
