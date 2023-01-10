@@ -205,6 +205,7 @@ fn main() {
     };
     let eval_mal_func = MalType::Function(Functions::NonNative(Rc::new(eval_mal_func)));
     env.set("eval".to_string(), eval_mal_func);
+    env.set("swap!".to_string(), MalType::Function(Functions::Native(swap)));
     default_env_non_native().into_iter().for_each(|s| {
         rep(s, env.clone()).unwrap();
     });
