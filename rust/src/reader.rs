@@ -145,13 +145,17 @@ fn tokenize(text: String) -> Vec<String> {
     let captures = REGEX.captures_iter(text.as_str());
     let mut result: Vec<String> = vec![];
     for capture in captures {
-        result.push(
+        let cap =
             capture
                 .get(1)
                 .expect("should have returned a capture")
                 .as_str()
-                .to_string(),
-        )
+                .to_string();
+        if cap.starts_with(";"){
+            continue
+        } else {
+            result.push(cap);
+        }
     }
     // println!("{:?}", result);
     result
