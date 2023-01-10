@@ -300,8 +300,8 @@ fn reset(mut args: Vector<MalType>) -> EvalResult{
     let first = args.pop_front().ok_or(WrongArgAmount)?;
     let second = args.pop_front().ok_or(WrongArgAmount)?;
     let first = first.to_atom()?;
-    let f = first.0.replace(second);
-    Ok(f)
+    first.0.replace(second.clone());
+    Ok(second)
 }
 
 

@@ -129,7 +129,7 @@ fn eval(mut ast: MalType, mut env: Env) -> EvalResult {
                                 return f.call(new_list)
                             }
                             MalType::NonNativeFunction(f) => {
-                                env = env.new_bind(f.params.clone(), new_list)?;
+                                env = f.env.new_bind(f.params.clone(), new_list)?;
                                 f.ast.clone()
                             }
                             other => return Err(EvalError::InvalidType("Function".to_string(), other.type_string())),

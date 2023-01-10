@@ -3,7 +3,7 @@ extern crate im_rc;
 extern crate log;
 extern crate mal_rust;
 
-use im_rc::{HashMap, Vector};
+use im_rc::{HashMap, Vector, vector};
 use log::warn;
 use mal_rust::env::Env;
 use mal_rust::functions::{default_env, default_env_non_native, Functions, InnerFunction};
@@ -131,7 +131,7 @@ fn eval(mut ast: MalType, mut env: Env) -> EvalResult {
                                 return f.call(new_list)
                             }
                             MalType::NonNativeFunction(f) => {
-                                env = env.new_bind(f.params.clone(), new_list)?;
+                                env = f.env.new_bind(f.params.clone(), new_list)?;
                                 f.ast.clone()
                             }
                             other => return Err(EvalError::InvalidType("Function".to_string(), other.type_string())),
@@ -230,4 +230,22 @@ fn main() {
         }
     }
     rl.save_history("history.txt").unwrap();
+}
+
+fn swap(mut args: Vector<MalType>) -> EvalResult {
+    let first = args.pop_front().ok_or(WrongArgAmount)?.to_atom()?;
+    let second = args.pop_front().ok_or(WrongArgAmount)?;
+    let result = match second {
+        MalType::Function(f) => {
+            f.call(vector![first.clone().get_value()])
+        }
+        MalType::NonNativeFunction(f) => {
+            let ast = f.ast.clone();
+            let env = f.env.new_bind(f.params.clone(), vector![first.clone().get_value()])?;
+            eval(ast, env)
+        }
+        _ => return Err(EvalError::InvalidType("function".to_string(), second.type_string()))
+    };
+    first.0.replace(result.clone()?);
+    result
 }

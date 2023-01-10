@@ -62,7 +62,7 @@ impl MalType {
             }
             MalType::Function(_) => "#<function>".to_string(),
             MalType::NonNativeFunction(_) => "#<function>".to_string(),
-            MalType::Atom(a) => {format!("{}", a.get_value())}
+            MalType::Atom(a) => {format!("(atom {})", a.get_value())}
         }
     }
 }
