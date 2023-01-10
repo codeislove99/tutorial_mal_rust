@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use env::Env;
 use im_rc::Vector;
 use std::fmt::{Debug, Formatter};
@@ -7,10 +8,12 @@ use types::EvalError::WrongArgAmount;
 use types::{EvalError, EvalResult};
 use MalType;
 use MalType::{Bool, Float, Integer, Nil};
+use reader::read_str;
 
 pub fn default_env_non_native() -> Vec<String> {
     let mut v = Vec::new();
     v.push("(def! not (fn* (a) (if a false true)))");
+    v.push(r#"(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) "\nnil)")))))"#);
     v.iter().map(|s| s.to_string()).collect()
 }
 pub fn default_env() -> Env {
@@ -34,6 +37,12 @@ pub fn default_env() -> Env {
         ("pr-str", pr_str),
         ("str", str),
         ("println", println),
+        ("read-string", read_string),
+        ("slurp", slurp),
+        ("atom", atom),
+        ("atom?", is_atom),
+        ("deref", deref),
+        ("reset!", reset),
     ];
     v.into_iter().for_each(|(k, f)| {
         env.set(k.into(), Functions::new_native(f));
@@ -259,3 +268,40 @@ fn join(args: Vector<MalType>, sep: &str, print: bool, readably: bool) -> EvalRe
         Ok(s.into())
     }
 }
+
+fn read_string(mut args: Vector<MalType>) -> EvalResult{
+    let str = args.pop_front().ok_or(WrongArgAmount)?.to_mal_string()?;
+    let str = str.into_iter().collect::<String>();
+    Ok(read_str(str)?)
+}
+
+fn slurp(mut args: Vector<MalType>) -> EvalResult {
+    let file_name = args.pop_front().ok_or(WrongArgAmount)?.to_mal_string()?;
+    let str = file_name.into_iter().collect::<String>();
+    let file = std::fs::read_to_string(str.clone()).map_err(|e| EvalError::InvalidFile(str))?;
+    Ok(file.into())
+}
+
+fn atom(mut args: Vector<MalType>) -> EvalResult {
+    let first = args.pop_front().ok_or(WrongArgAmount)?;
+    Ok(first.to_atom_mal_type())
+}
+
+fn is_atom(mut args: Vector<MalType>) -> EvalResult {
+    let first = args.pop_front().ok_or(WrongArgAmount)?;
+    Ok(MalType::Bool(first.to_atom_inner().is_ok()))
+}
+
+fn deref(mut args: Vector<MalType>) -> EvalResult{
+    let first = args.pop_front().ok_or(WrongArgAmount)?;
+    first.to_atom_inner()
+}
+fn reset(mut args: Vector<MalType>) -> EvalResult{
+    let first = args.pop_front().ok_or(WrongArgAmount)?;
+    let second = args.pop_front().ok_or(WrongArgAmount)?;
+    let first = first.to_atom()?;
+    let f = first.0.replace(second);
+    Ok(f)
+}
+
+

@@ -1,11 +1,12 @@
+use std::cell::RefCell;
 use functions::{Functions, InnerFunction};
 use im_rc::{HashMap, Vector};
 use std::error;
-use std::fmt::{Debug, Display, Formatter};
-use std::hash::Hash;
+use std::fmt::{Debug, Display, Formatter, write};
+use std::hash::{Hash, Hasher};
 use std::ops::Deref;
 use std::rc::Rc;
-use types::EvalError::InvalidType;
+use types::EvalError::{InvalidType};
 
 type Sym = String;
 
@@ -58,7 +59,25 @@ pub enum MalType {
     HashMap(HashMap<MalType, MalType>),
     Function(Functions),
     NonNativeFunction(Rc<InnerFunction>),
+    Atom(Atom)
 }
+
+#[derive(Debug, Eq, PartialEq, Clone, PartialOrd)]
+pub struct Atom(pub Rc<RefCell<MalType>>);
+
+impl Atom {
+    pub fn get_value(self) -> MalType{
+        self.0.borrow().clone()
+    }
+}
+
+impl Hash for Atom{
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        panic!("cannot hash an atom")
+    }
+}
+
+
 
 impl From<Rc<dyn Fn(Vector<MalType>) -> EvalResult>> for MalType {
     fn from(f: Rc<dyn Fn(Vector<MalType>) -> EvalResult>) -> Self {
@@ -105,6 +124,8 @@ pub enum EvalError {
     InvalidType(String, String),
     WrongArgAmount,
     SymbolNotFound(String),
+    ParseError(ParseError),
+    InvalidFile(String)
 }
 
 impl Display for EvalError {
@@ -118,10 +139,21 @@ impl Display for EvalError {
             EvalError::SymbolNotFound(s) => {
                 write!(f, "Symbol not found: {}", s)
             }
+            EvalError::ParseError(p) => {
+                write!(f, "failed at parsing {}", p)
+            }
+            EvalError::InvalidFile(s) => {
+                write!(f, "failed at loading file: {}", s)
+            }
         }
     }
 }
 
+impl From<ParseError> for EvalError {
+    fn from(p: ParseError) -> Self {
+        EvalError::ParseError(p)
+    }
+}
 impl error::Error for EvalError {}
 
 impl error::Error for ParseError {}
@@ -158,7 +190,14 @@ impl MalType {
             MalType::HashMap(_) => "hash-map".to_string(),
             MalType::Function(_) => "function".to_string(),
             MalType::NonNativeFunction(_) => "function".to_string(),
+            MalType::Atom(_) => {"atom".to_string()}
         }
+    }
+    pub fn to_atom_value(self) -> Atom{
+        Atom(Rc::new(RefCell::new(self)))
+    }
+    pub fn to_atom_mal_type(self) -> Self{
+        MalType::Atom(self.to_atom_value())
     }
     pub fn to_symbol(self) -> MidResult<String> {
         match self {
@@ -258,4 +297,21 @@ impl MalType {
             _ => true,
         }
     }
+    pub fn to_real_str(self) -> MidResult<String>{
+        Ok(self.to_mal_string()?.into_iter().collect::<String>())
+    }
+
+    pub fn to_atom_inner(self) -> EvalResult{
+        match self {
+            MalType::Atom(m) => Ok(m.get_value()),
+            _ => Err(EvalError::InvalidType("Atom".to_string(), self.type_string()))
+        }
+    }
+    pub fn to_atom(self) -> MidResult<Atom>{
+        match self {
+            MalType::Atom(m) => Ok(m),
+            _ => Err(EvalError::InvalidType("Atom".to_string(), self.type_string()))
+        }
+    }
 }
+

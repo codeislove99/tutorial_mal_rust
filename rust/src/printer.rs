@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::fmt::{Display, Formatter};
 use types::MalType;
 use types::MalType::Float;
@@ -61,6 +62,7 @@ impl MalType {
             }
             MalType::Function(_) => "#<function>".to_string(),
             MalType::NonNativeFunction(_) => "#<function>".to_string(),
+            MalType::Atom(a) => {format!("{}", a.get_value())}
         }
     }
 }
